@@ -213,6 +213,8 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
     switch ([UIApplication sharedApplication].applicationState) {
         case UIApplicationStateActive:
         {
+            NSLog(@"LOG:: Notification State - UIApplicationStateActive");
+
             PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
             pushHandler.notificationMessage = userInfo;
             pushHandler.isInline = NO;
@@ -222,13 +224,27 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
         }
         case UIApplicationStateInactive:
         {
-            NSLog(@"coldstart");
-            self.launchNotification = response.notification.request.content.userInfo;
+            NSLog(@"LOG:: Notification State - UIApplicationStateInactive");
+
+            if([response.actionIdentifier rangeOfString:@"UNNotificationDefaultActionIdentifier"].location == NSNotFound)
+            {
+                NSLog(@"LOG:: Running userInfo (New Method)");
+                self.launchNotification = userInfo;
+            }
+            else
+            {
+                NSLog(@"LOG:: Running response.notification.request.content.userInfo (Old Method)");
+                self.launchNotification = response.notification.request.content.userInfo;
+            }
+
+            // self.launchNotification = response.notification.request.content.userInfo;
             self.coldstart = [NSNumber numberWithBool:YES];
             break;
         }
         case UIApplicationStateBackground:
         {
+            NSLog(@"LOG:: Notification State - UIApplicationStateBackground");
+
             void (^safeHandler)(void) = ^(void){
                 dispatch_async(dispatch_get_main_queue(), ^{
                     completionHandler();
